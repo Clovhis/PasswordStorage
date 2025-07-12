@@ -1,0 +1,30 @@
+name: Build & Release
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Build executable
+        run: pyinstaller --noconfirm --onefolder password_manager.py
+      - name: Create zip
+        run: Compress-Archive -Path dist/password_manager/* -DestinationPath app.zip
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: app.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
