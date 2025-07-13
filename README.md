@@ -14,10 +14,8 @@ python password_manager.py
 
 To build a portable version, use PyInstaller:
 
-```bash
-pyinstaller --noconfirm --onedir password_manager.py
-```
-
+pip install -r requirements.txt
+pyinstaller --noconfirm --onedir --hidden-import pyperclip password_manager.py
 The executable will be located in `dist/password_manager/`.
 
 Logs are written to `app.log` in the same directory as the executable. Check this file if the application exits unexpectedly.
