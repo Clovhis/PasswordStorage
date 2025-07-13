@@ -21,6 +21,7 @@ The executable will be located in `dist/password_manager/`.
 
 ## GitHub Actions
 The repository includes a workflow that builds the executable and attaches a zip
-archive to a release when pushing to branches named `feature/**`. The workflow
-grants `contents: write` permission to `GITHUB_TOKEN` so it can publish the
-release automatically.
+archive to a release whenever code is pushed to a branch matching `feature/**`.
+Each run publishes a new release tagged with the branch name and the workflow
+run number. The workflow grants `contents: write` permission to `GITHUB_TOKEN`
+so it can publish the release automatically.
