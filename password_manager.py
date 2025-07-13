@@ -20,6 +20,13 @@ if getattr(sys, 'frozen', False):
 else:
     BASE_DIR = Path(__file__).parent
 DATA_FILE = BASE_DIR / 'data.vault'
+LOG_FILE = BASE_DIR / 'error.log'
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
+handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+logger.addHandler(handler)
 
 class PasswordManager(tb.Window):
     def __init__(self):
@@ -172,5 +179,12 @@ class PasswordManager(tb.Window):
                 self.entries = []
 
 if __name__ == "__main__":
-    app = PasswordManager()
-    app.mainloop()
+    try:
+        app = PasswordManager()
+        app.mainloop()
+    except Exception as e:
+        logger.exception("Unhandled exception")
+        try:
+            messagebox.showerror("Error", str(e))
+        except Exception:
+            pass
