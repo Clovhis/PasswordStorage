@@ -21,6 +21,10 @@ DATA_FILE = BASE_DIR / 'data.vault'
 class PasswordManager(tb.Window):
     def __init__(self):
         super().__init__(themename="flatly")
+        # Apply the desired theme and configure widget styles
+        # using the existing ``style`` property from ``ttkbootstrap``.
+        self.style.theme_use("flatly")
+        self.style.configure("Treeview", rowheight=25)
         self.title("Password Manager")
         self.geometry("900x500")
         self.resizable(False, False)
