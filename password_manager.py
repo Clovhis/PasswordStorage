@@ -22,6 +22,7 @@ if getattr(sys, 'frozen', False):
     BASE_DIR = Path(sys.executable).parent
 else:
     BASE_DIR = Path(__file__).parent
+
 DATA_FILE = BASE_DIR / 'data.vault'
 LOG_FILE = BASE_DIR / 'error.log'
 
@@ -33,22 +34,20 @@ logger.addHandler(handler)
 
 class PasswordManager(tb.Window):
     def __init__(self):
-        super().__init__()
-        # ttkbootstrap already exposes a ``style`` property, which returns the
-        # internal ``Style`` instance.  Assigning to ``self.style`` would raise
-        # ``AttributeError`` because the property has no setter.  Use the
-        # ``theme_use`` method instead to apply the desired theme.
+        super().__init__(themename="flatly")
+
+        # Usar propiedad style existente sin sobrescribirla
         self.style.theme_use("flatly")
+        style = self.style
+        style.configure("Treeview", font=DEFAULT_FONT, rowheight=25)
+        style.configure("Treeview.Heading", font=DEFAULT_FONT)
+        style.map("Treeview", background=[("selected", style.colors.primary)])
+
         self.title("Password Manager")
         self.geometry("900x500")
         self.resizable(True, True)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-
-        self.style = tb.Style()
-        self.style.configure("Treeview", font=DEFAULT_FONT, rowheight=25)
-        self.style.configure("Treeview.Heading", font=DEFAULT_FONT)
-        self.style.map("Treeview", background=[("selected", self.style.colors.primary)])
 
         self.fernet = Fernet(_KEY)
         self.entries = []
@@ -71,6 +70,7 @@ class PasswordManager(tb.Window):
             self.tree.heading(col, text=col.title(), anchor="center")
             self.tree.column(col, width=150, anchor="center")
         self.tree.column("notes", width=200, anchor="center")
+
         ysb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
         xsb = ttk.Scrollbar(tree_frame, orient="horizontal", command=self.tree.xview)
         self.tree.configure(yscrollcommand=ysb.set, xscrollcommand=xsb.set)
