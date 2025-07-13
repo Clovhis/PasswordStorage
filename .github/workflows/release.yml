@@ -19,12 +19,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Build executable
-        run: pyinstaller --noconfirm --onefolder password_manager.py
+        run: pyinstaller --noconfirm --onedir password_manager.py
       - name: Create zip
         run: Compress-Archive -Path dist/password_manager/* -DestinationPath app.zip
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ github.ref_name }}
           files: app.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

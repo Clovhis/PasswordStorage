@@ -1,6 +1,7 @@
 # PasswordStorage
 
 Simple password manager built with Tkinter and ttkbootstrap. Data is encrypted automatically using a fixed key and stored in `data.vault` next to the executable.
+The interface uses a `ttk.Treeview` table with a consistent layout and tooltips for common actions.
 
 ## Usage
 
@@ -11,10 +12,10 @@ pip install -r requirements.txt
 python password_manager.py
 ```
 
-To build a portable version, use pyinstaller:
+To build a portable version, use PyInstaller:
 
 ```bash
-pyinstaller --noconfirm --onefolder password_manager.py
+pyinstaller --noconfirm --onedir password_manager.py
 ```
 
 The executable will be located in `dist/password_manager/`.
