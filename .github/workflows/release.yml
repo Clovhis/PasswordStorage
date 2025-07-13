@@ -27,5 +27,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: app.zip
+          tag_name: "build-${{ github.run_number }}"
+          name: "Build ${{ github.run_number }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

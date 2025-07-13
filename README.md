@@ -20,8 +20,11 @@ pyinstaller --noconfirm --onedir password_manager.py
 
 The executable will be located in `dist/password_manager/`.
 
+Logs are written to `app.log` in the same directory as the executable. Check this file if the application exits unexpectedly.
+
 ## GitHub Actions
 The repository includes a workflow that builds the executable and attaches a zip
-archive to a release when pushing to branches named `feature/**`. The workflow
-grants `contents: write` permission to `GITHUB_TOKEN` so it can publish the
-release automatically.
+archive to a release when pushing to branches named `feature/**`. Every push
+generates a new release tagged with the GitHub Actions run number so previous
+builds are preserved. The workflow grants `contents: write` permission to
+`GITHUB_TOKEN` so it can publish the release automatically.

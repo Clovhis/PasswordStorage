@@ -1,9 +1,12 @@
+"""Simple password manager application."""
+
 import json
 import os
 import sys
 from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox, ttk
+import logging
 
 import pyperclip
 from cryptography.fernet import Fernet
@@ -95,13 +98,12 @@ class PasswordManager(tb.Window):
             values = (
                 entry.get("title", ""),
                 entry.get("username", ""),
-                "******",  # mask password
+                "******",
                 entry.get("url", ""),
                 entry.get("notes", ""),
             )
             tag = "odd" if idx % 2 else "even"
             self.tree.insert("", "end", iid=str(idx), values=values, tags=(tag,))
-
         self.tree.tag_configure("odd", background=self.style.colors.light)
         self.tree.tag_configure("even", background=self.style.colors.lightest)
 
@@ -174,9 +176,12 @@ class PasswordManager(tb.Window):
                     data = f.read()
                 decoded = self.fernet.decrypt(data)
                 self.entries = json.loads(decoded.decode())
-            except Exception:
+            except Exception as exc:
+                logger.exception("Failed to load entries")
                 messagebox.showerror("Error", "No se pudo leer archivo de datos")
                 self.entries = []
+        else:
+            self.entries = []
 
 if __name__ == "__main__":
     try:
