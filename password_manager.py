@@ -20,7 +20,12 @@ DATA_FILE = BASE_DIR / 'data.vault'
 
 class PasswordManager(tb.Window):
     def __init__(self):
-        super().__init__(themename="flatly")
+        super().__init__()
+        # ttkbootstrap already exposes a ``style`` property, which returns the
+        # internal ``Style`` instance.  Assigning to ``self.style`` would raise
+        # ``AttributeError`` because the property has no setter.  Use the
+        # ``theme_use`` method instead to apply the desired theme.
+        self.style.theme_use("flatly")
         self.title("Password Manager")
         self.geometry("900x500")
         self.resizable(False, False)
