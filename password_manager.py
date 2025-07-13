@@ -1,13 +1,19 @@
+"""Simple password manager application."""
+
 import json
 import os
 import sys
 from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox, ttk
+import logging
 
 import pyperclip
 from cryptography.fernet import Fernet
 import ttkbootstrap as tb
+from ttkbootstrap.tooltip import ToolTip
+
+DEFAULT_FONT = ("Helvetica", 10)
 
 # Fixed key for symmetric encryption
 _KEY = b'510xYPt3EyKwn27amFGZYjbQnO83TvM44AUZ_MtKSXM='
@@ -17,13 +23,27 @@ if getattr(sys, 'frozen', False):
 else:
     BASE_DIR = Path(__file__).parent
 DATA_FILE = BASE_DIR / 'data.vault'
+LOG_FILE = BASE_DIR / 'error.log'
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
+handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+logger.addHandler(handler)
 
 class PasswordManager(tb.Window):
     def __init__(self):
         super().__init__(themename="flatly")
         self.title("Password Manager")
         self.geometry("900x500")
-        self.resizable(False, False)
+        self.resizable(True, True)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+
+        self.style = tb.Style()
+        self.style.configure("Treeview", font=DEFAULT_FONT, rowheight=25)
+        self.style.configure("Treeview.Heading", font=DEFAULT_FONT)
+        self.style.map("Treeview", background=[("selected", self.style.colors.primary)])
 
         self.fernet = Fernet(_KEY)
         self.entries = []
@@ -32,21 +52,44 @@ class PasswordManager(tb.Window):
         self._populate_table()
 
     def _create_widgets(self):
-        self.tree = ttk.Treeview(self, columns=("title", "username", "password", "url", "notes"), show="headings")
+        tree_frame = ttk.Frame(self)
+        tree_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        tree_frame.rowconfigure(0, weight=1)
+        tree_frame.columnconfigure(0, weight=1)
+
+        self.tree = ttk.Treeview(
+            tree_frame,
+            columns=("title", "username", "password", "url", "notes"),
+            show="headings",
+        )
         for col in ("title", "username", "password", "url", "notes"):
-            self.tree.heading(col, text=col.title())
-            self.tree.column(col, width=150)
-        self.tree.column("notes", width=200)
-        self.tree.pack(fill="both", expand=True, padx=10, pady=10)
+            self.tree.heading(col, text=col.title(), anchor="center")
+            self.tree.column(col, width=150, anchor="center")
+        self.tree.column("notes", width=200, anchor="center")
+        ysb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
+        xsb = ttk.Scrollbar(tree_frame, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=ysb.set, xscrollcommand=xsb.set)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        ysb.grid(row=0, column=1, sticky="ns")
+        xsb.grid(row=1, column=0, sticky="ew")
 
         btn_frame = ttk.Frame(self)
-        btn_frame.pack(pady=5)
+        btn_frame.grid(row=1, column=0, pady=5)
 
-        tb.Button(btn_frame, text="+", width=3, command=self._add_entry, bootstyle="success").grid(row=0, column=0, padx=5)
-        tb.Button(btn_frame, text="Copy User", command=self._copy_username).grid(row=0, column=1, padx=5)
-        tb.Button(btn_frame, text="Copy Pass", command=self._copy_password).grid(row=0, column=2, padx=5)
-        tb.Button(btn_frame, text="Delete", bootstyle="danger", command=self._delete_entry).grid(row=0, column=3, padx=5)
-        tb.Button(btn_frame, text="Guardar", bootstyle="primary", command=self._save_entries).grid(row=0, column=4, padx=5)
+        add_btn = tb.Button(btn_frame, text="+", width=3, command=self._add_entry, bootstyle="success")
+        user_btn = tb.Button(btn_frame, text="Copy User", command=self._copy_username, width=10)
+        pass_btn = tb.Button(btn_frame, text="Copy Pass", command=self._copy_password, width=10)
+        del_btn = tb.Button(btn_frame, text="Delete", bootstyle="danger", command=self._delete_entry, width=10)
+        save_btn = tb.Button(btn_frame, text="Guardar", bootstyle="primary", command=self._save_entries, width=10)
+
+        for i, btn in enumerate((add_btn, user_btn, pass_btn, del_btn, save_btn)):
+            btn.grid(row=0, column=i, padx=10)
+
+        ToolTip(add_btn, text="Agregar nueva entrada")
+        ToolTip(user_btn, text="Copiar usuario")
+        ToolTip(pass_btn, text="Copiar contraseña")
+        ToolTip(del_btn, text="Eliminar entrada")
+        ToolTip(save_btn, text="Guardar cambios")
 
     def _populate_table(self):
         for item in self.tree.get_children():
@@ -55,24 +98,29 @@ class PasswordManager(tb.Window):
             values = (
                 entry.get("title", ""),
                 entry.get("username", ""),
-                "******",  # mask password
+                "******",
                 entry.get("url", ""),
                 entry.get("notes", ""),
             )
-            self.tree.insert("", "end", iid=str(idx), values=values)
+            tag = "odd" if idx % 2 else "even"
+            self.tree.insert("", "end", iid=str(idx), values=values, tags=(tag,))
+        self.tree.tag_configure("odd", background=self.style.colors.light)
+        self.tree.tag_configure("even", background=self.style.colors.lightest)
 
     def _add_entry(self):
         dialog = tb.Toplevel(self)
         dialog.title("Nueva entrada")
         dialog.grab_set()
+        dialog.columnconfigure(1, weight=1)
 
         labels = ["Title", "User Name", "Password", "URL", "Notes"]
         entries = {}
         for i, text in enumerate(labels):
-            ttk.Label(dialog, text=text).grid(row=i, column=0, padx=5, pady=5, sticky="e")
-            ent = ttk.Entry(dialog, width=40, show="*" if text == "Password" else "")
-            ent.grid(row=i, column=1, padx=5, pady=5)
+            ttk.Label(dialog, text=text, font=DEFAULT_FONT).grid(row=i, column=0, padx=10, pady=5, sticky="e")
+            ent = ttk.Entry(dialog, width=40, show="*" if text == "Password" else "", font=DEFAULT_FONT)
+            ent.grid(row=i, column=1, padx=10, pady=5, sticky="ew")
             entries[text.lower().replace(" ", "")] = ent
+
         def save():
             entry = {
                 "title": entries["title"].get(),
@@ -84,7 +132,10 @@ class PasswordManager(tb.Window):
             self.entries.append(entry)
             self._populate_table()
             dialog.destroy()
-        ttk.Button(dialog, text="Guardar", command=save).grid(row=len(labels), column=0, columnspan=2, pady=10)
+
+        ttk.Button(dialog, text="Guardar", command=save, width=10).grid(
+            row=len(labels), column=0, columnspan=2, pady=10
+        )
 
     def _delete_entry(self):
         selected = self.tree.selection()
@@ -125,10 +176,20 @@ class PasswordManager(tb.Window):
                     data = f.read()
                 decoded = self.fernet.decrypt(data)
                 self.entries = json.loads(decoded.decode())
-            except Exception:
+            except Exception as exc:
+                logger.exception("Failed to load entries")
                 messagebox.showerror("Error", "No se pudo leer archivo de datos")
                 self.entries = []
+        else:
+            self.entries = []
 
 if __name__ == "__main__":
-    app = PasswordManager()
-    app.mainloop()
+    try:
+        app = PasswordManager()
+        app.mainloop()
+    except Exception as e:
+        logger.exception("Unhandled exception")
+        try:
+            messagebox.showerror("Error", str(e))
+        except Exception:
+            pass
