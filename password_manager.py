@@ -44,7 +44,7 @@ class PasswordManager(tb.Window):
         style.configure("Treeview.Heading", font=DEFAULT_FONT)
         style.map("Treeview", background=[("selected", style.colors.primary)])
 
-        self.title("Password Manager")
+        self.title("Gestor de Contraseñas")
         self.geometry("900x500")
         self.resizable(True, True)
         self.columnconfigure(0, weight=1)
@@ -67,8 +67,15 @@ class PasswordManager(tb.Window):
             columns=("title", "username", "password", "url", "notes"),
             show="headings",
         )
+        column_titles = {
+            "title": "Título",
+            "username": "Usuario",
+            "password": "Contraseña",
+            "url": "URL",
+            "notes": "Notas",
+        }
         for col in ("title", "username", "password", "url", "notes"):
-            self.tree.heading(col, text=col.title(), anchor="center")
+            self.tree.heading(col, text=column_titles[col], anchor="center")
             self.tree.column(col, width=150, anchor="center")
         self.tree.column("notes", width=200, anchor="center")
 
@@ -82,11 +89,39 @@ class PasswordManager(tb.Window):
         btn_frame = ttk.Frame(self)
         btn_frame.grid(row=1, column=0, pady=5)
 
-        add_btn = tb.Button(btn_frame, text="+", width=3, command=self._add_entry, bootstyle="success")
-        user_btn = tb.Button(btn_frame, text="Copy User", command=self._copy_username, width=10)
-        pass_btn = tb.Button(btn_frame, text="Copy Pass", command=self._copy_password, width=10)
-        del_btn = tb.Button(btn_frame, text="Delete", bootstyle="danger", command=self._delete_entry, width=10)
-        save_btn = tb.Button(btn_frame, text="Guardar", bootstyle="primary", command=self._save_entries, width=10)
+        add_btn = tb.Button(
+            btn_frame,
+            text="Agregar",
+            width=10,
+            command=self._add_entry,
+            bootstyle="success",
+        )
+        user_btn = tb.Button(
+            btn_frame,
+            text="Copiar usuario",
+            command=self._copy_username,
+            width=12,
+        )
+        pass_btn = tb.Button(
+            btn_frame,
+            text="Copiar contraseña",
+            command=self._copy_password,
+            width=14,
+        )
+        del_btn = tb.Button(
+            btn_frame,
+            text="Eliminar",
+            bootstyle="danger",
+            command=self._delete_entry,
+            width=10,
+        )
+        save_btn = tb.Button(
+            btn_frame,
+            text="Guardar",
+            bootstyle="primary",
+            command=self._save_entries,
+            width=10,
+        )
 
         for i, btn in enumerate((add_btn, user_btn, pass_btn, del_btn, save_btn)):
             btn.grid(row=0, column=i, padx=10)
@@ -121,13 +156,26 @@ class PasswordManager(tb.Window):
         dialog.grab_set()
         dialog.columnconfigure(1, weight=1)
 
-        labels = ["Title", "User Name", "Password", "URL", "Notes"]
+        fields = [
+            ("title", "Título"),
+            ("username", "Usuario"),
+            ("password", "Contraseña"),
+            ("url", "URL"),
+            ("notes", "Notas"),
+        ]
         entries = {}
-        for i, text in enumerate(labels):
-            ttk.Label(dialog, text=text, font=DEFAULT_FONT).grid(row=i, column=0, padx=10, pady=5, sticky="e")
-            ent = ttk.Entry(dialog, width=40, show="*" if text == "Password" else "", font=DEFAULT_FONT)
+        for i, (key, label) in enumerate(fields):
+            ttk.Label(dialog, text=label, font=DEFAULT_FONT).grid(
+                row=i, column=0, padx=10, pady=5, sticky="e"
+            )
+            ent = ttk.Entry(
+                dialog,
+                width=40,
+                show="*" if key == "password" else "",
+                font=DEFAULT_FONT,
+            )
             ent.grid(row=i, column=1, padx=10, pady=5, sticky="ew")
-            entries[text.lower().replace(" ", "")] = ent
+            entries[key] = ent
 
         def save():
             entry = {
@@ -148,7 +196,7 @@ class PasswordManager(tb.Window):
     def _delete_entry(self):
         selected = self.tree.selection()
         if not selected:
-            messagebox.showinfo("Info", "Seleccione una entrada")
+            messagebox.showinfo("Información", "Seleccione una entrada")
             return
         if not messagebox.askyesno("Confirmar", "¿Estás seguro de eliminar esta entrada?"):
             return
