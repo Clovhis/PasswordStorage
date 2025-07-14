@@ -32,6 +32,7 @@ handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
 handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 logger.addHandler(handler)
 
+
 class PasswordManager(tb.Window):
     def __init__(self):
         super().__init__(themename="flatly")
@@ -99,6 +100,10 @@ class PasswordManager(tb.Window):
     def _populate_table(self):
         for item in self.tree.get_children():
             self.tree.delete(item)
+
+        # Estilo seguro para fondo de filas pares
+        self.tree.tag_configure("even", background=self.style.colors.bg)
+
         for idx, entry in enumerate(self.entries):
             values = (
                 entry.get("title", ""),
@@ -107,10 +112,8 @@ class PasswordManager(tb.Window):
                 entry.get("url", ""),
                 entry.get("notes", ""),
             )
-            tag = "odd" if idx % 2 else "even"
-            self.tree.insert("", "end", iid=str(idx), values=values, tags=(tag,))
-        self.tree.tag_configure("odd", background=self.style.colors.light)
-        self.tree.tag_configure("even", background=self.style.colors.lightest)
+            tags = ("even",) if idx % 2 == 0 else ()
+            self.tree.insert("", "end", iid=str(idx), values=values, tags=tags)
 
     def _add_entry(self):
         dialog = tb.Toplevel(self)
@@ -181,12 +184,13 @@ class PasswordManager(tb.Window):
                     data = f.read()
                 decoded = self.fernet.decrypt(data)
                 self.entries = json.loads(decoded.decode())
-            except Exception as exc:
+            except Exception:
                 logger.exception("Failed to load entries")
                 messagebox.showerror("Error", "No se pudo leer archivo de datos")
                 self.entries = []
         else:
             self.entries = []
+
 
 if __name__ == "__main__":
     try:
