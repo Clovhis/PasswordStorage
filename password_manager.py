@@ -51,6 +51,8 @@ class PasswordManager(tb.Window):
     def _populate_table(self):
         for item in self.tree.get_children():
             self.tree.delete(item)
+        # configure background color for even rows using a theme-safe value
+        self.tree.tag_configure("even", background=self.style.colors.bg)
         for idx, entry in enumerate(self.entries):
             values = (
                 entry.get("title", ""),
@@ -59,7 +61,8 @@ class PasswordManager(tb.Window):
                 entry.get("url", ""),
                 entry.get("notes", ""),
             )
-            self.tree.insert("", "end", iid=str(idx), values=values)
+            tags = ("even",) if idx % 2 == 0 else ()
+            self.tree.insert("", "end", iid=str(idx), values=values, tags=tags)
 
     def _add_entry(self):
         dialog = tb.Toplevel(self)
