@@ -22,7 +22,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build executable
-        run: pyinstaller --noconfirm --onedir password_manager.py
+        run: pyinstaller --noconfirm --onedir --windowed --icon icon.ico password_manager.py
 
       - name: Create zip
         run: Compress-Archive -Path dist/password_manager/* -DestinationPath app.zip

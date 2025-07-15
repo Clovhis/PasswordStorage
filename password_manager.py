@@ -45,6 +45,14 @@ class PasswordManager(tb.Window):
         style.map("Treeview", background=[("selected", style.colors.primary)])
 
         self.title("Password Manager")
+        icon_path = BASE_DIR / "icon.ico"
+        if icon_path.exists():
+            try:
+                self.icon_img = tk.PhotoImage(file=icon_path)
+                self.iconphoto(False, self.icon_img)
+            except Exception:
+                logger.exception("Failed to set window icon")
+
         self.geometry("900x500")
         self.resizable(True, True)
         self.columnconfigure(0, weight=1)
